@@ -1,0 +1,523 @@
+[
+    {
+        "id": "3409e5f3ffab8279",
+        "type": "tab",
+        "label": "CANDIJAY",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "1d35c72f606d90b5",
+        "type": "tab",
+        "label": "Telegram Sensor Data",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "6109a2c88e111a5f",
+        "type": "tab",
+        "label": "ESP32 CSV Logger",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "99af400251062e4e",
+        "type": "mqtt-broker",
+        "name": "HiveMQ Public",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true
+    },
+    {
+        "id": "4431e3328ee35feb",
+        "type": "ui_tab",
+        "name": "ESP32 Dashboard",
+        "icon": "dashboard",
+        "order": 1
+    },
+    {
+        "id": "f709b97d423d7d32",
+        "type": "ui_group",
+        "name": "ESP32 Online Freshwater Monitoring",
+        "tab": "4431e3328ee35feb",
+        "order": 1,
+        "width": 12
+    },
+    {
+        "id": "390818bf3129ed11",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "bot_config",
+        "type": "telegram bot",
+        "botname": "@Flood_Notifier_Alert_bot",
+        "usernames": "",
+        "chatids": "-1003138447422",
+        "baseapiurl": "",
+        "testenvironment": false,
+        "pollinterval": "200",
+        "usesocks": false,
+        "sockshost": "",
+        "socksport": "",
+        "socksusername": "",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbothost": "",
+        "localbotport": "",
+        "publicbotport": "",
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
+        "id": "80ef1d28d1bd303b",
+        "type": "mqtt in",
+        "z": "3409e5f3ffab8279",
+        "name": "ESP32 MQTT",
+        "topic": "esp32/sensors",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "99af400251062e4e",
+        "inputs": 0,
+        "x": 260,
+        "y": 200,
+        "wires": [
+            [
+                "6ebe9c5e56b44519"
+            ]
+        ]
+    },
+    {
+        "id": "6ebe9c5e56b44519",
+        "type": "function",
+        "z": "3409e5f3ffab8279",
+        "name": "Split JSON Fields",
+        "func": "let payload = msg.payload;\n\n// Send individual messages for each gauge\nlet tempMsg = {payload: payload.tempC};\nlet tdsRawMsg = {payload: payload.tdsRaw};\nlet tdsCompMsg = {payload: payload.tdsComp};\nlet phMsg = {payload: payload.ph};\nlet turbMsg = {payload: payload.turbidity};\n\nreturn [tempMsg, tdsRawMsg, tdsCompMsg, phMsg, turbMsg];",
+        "outputs": 5,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 500,
+        "y": 200,
+        "wires": [
+            [
+                "f5eade2dd1800c03"
+            ],
+            [
+                "1b67674b1dad6bc3"
+            ],
+            [
+                "9c046c782972a2d4"
+            ],
+            [
+                "f2a2c6de557d2dc1"
+            ],
+            [
+                "2cef9437bfb07084"
+            ]
+        ]
+    },
+    {
+        "id": "f5eade2dd1800c03",
+        "type": "ui_gauge",
+        "z": "3409e5f3ffab8279",
+        "name": "Temperature",
+        "group": "f709b97d423d7d32",
+        "order": 1,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "Temperature",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 100,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 50,
+        "seg2": 75,
+        "x": 720,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "1b67674b1dad6bc3",
+        "type": "ui_gauge",
+        "z": "3409e5f3ffab8279",
+        "name": "TDS Raw",
+        "group": "f709b97d423d7d32",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "TDS Raw",
+        "label": "ppm",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 3000,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 1000,
+        "seg2": 2000,
+        "x": 720,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "9c046c782972a2d4",
+        "type": "ui_gauge",
+        "z": "3409e5f3ffab8279",
+        "name": "TDS Comp",
+        "group": "f709b97d423d7d32",
+        "order": 3,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "TDS Comp",
+        "label": "ppm",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 3000,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 1000,
+        "seg2": 2000,
+        "x": 720,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "f2a2c6de557d2dc1",
+        "type": "ui_gauge",
+        "z": "3409e5f3ffab8279",
+        "name": "pH",
+        "group": "f709b97d423d7d32",
+        "order": 4,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "pH Value",
+        "label": "",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 14,
+        "colors": [
+            "#ca3838",
+            "#e6e600",
+            "#00b500"
+        ],
+        "seg1": 5,
+        "seg2": 10,
+        "x": 720,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "2cef9437bfb07084",
+        "type": "ui_gauge",
+        "z": "3409e5f3ffab8279",
+        "name": "Turbidity",
+        "group": "f709b97d423d7d32",
+        "order": 5,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "Turbidity",
+        "label": "NTU",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 5000,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 1000,
+        "seg2": 3000,
+        "x": 720,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "851d813e2c277333",
+        "type": "mqtt in",
+        "z": "1d35c72f606d90b5",
+        "name": "ESP32 MQTT",
+        "topic": "esp32/sensors",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "99af400251062e4e",
+        "inputs": 0,
+        "x": 200,
+        "y": 80,
+        "wires": [
+            [
+                "92fdae641bf58438"
+            ]
+        ]
+    },
+    {
+        "id": "92fdae641bf58438",
+        "type": "function",
+        "z": "1d35c72f606d90b5",
+        "name": "Store MQTT values globally",
+        "func": "// Save sensor values to global context\nglobal.set('tempC', msg.payload.tempC);\nglobal.set('tdsRaw', msg.payload.tdsRaw);\nglobal.set('tdsComp', msg.payload.tdsComp);\nglobal.set('ph', msg.payload.ph);\nglobal.set('turbidity', msg.payload.turbidity);\nreturn msg;",
+        "outputs": 1,
+        "x": 470,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bf2b9a7bed74800c",
+        "type": "inject",
+        "z": "1d35c72f606d90b5",
+        "name": "Send Telegram every 30s",
+        "props": [],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 1,
+        "topic": "",
+        "x": 200,
+        "y": 160,
+        "wires": [
+            [
+                "606804e60ce5ebce"
+            ]
+        ]
+    },
+    {
+        "id": "606804e60ce5ebce",
+        "type": "function",
+        "z": "1d35c72f606d90b5",
+        "name": "Format Telegram Message",
+        "func": "let tempC = global.get('tempC') || 0;\nlet tdsRaw = global.get('tdsRaw') || 0;\nlet tdsComp = global.get('tdsComp') || 0;\nlet ph = global.get('ph') || 0;\nlet turbidity = global.get('turbidity') || 0;\n\nlet msgText = `*💧 ESP32 Freshwater Sensor Data*\\n\\n` +\n    `🌡 *Temperature:* ${tempC.toFixed(2)} °C\\n` +\n    `🧪 *TDS Raw:* ${tdsRaw.toFixed(2)} ppm\\n` +\n    `🔬 *TDS Comp:* ${tdsComp.toFixed(2)} ppm\\n` +\n    `📏 *pH Value:* ${ph.toFixed(2)}\\n` +\n    `🌊 *Turbidity:* ${turbidity.toFixed(2)} NTU`;\n\n// URL encode the message so Telegram interprets newlines correctly\nmsg.payload = encodeURIComponent(msgText);\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 160,
+        "wires": [
+            [
+                "3607e3b18dec82ab"
+            ]
+        ]
+    },
+    {
+        "id": "3607e3b18dec82ab",
+        "type": "http request",
+        "z": "1d35c72f606d90b5",
+        "name": "Send Telegram Message",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.telegram.org/bot8363304260:AAF6UTJzRja3smFt_lxD_nONaAPmkxYf0vk/sendMessage?chat_id=-1003138447422&text={{payload}}&parse_mode=Markdown",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 720,
+        "y": 160,
+        "wires": [
+            [
+                "66e83851b5e165db"
+            ]
+        ]
+    },
+    {
+        "id": "66e83851b5e165db",
+        "type": "debug",
+        "z": "1d35c72f606d90b5",
+        "name": "Telegram Response",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 970,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "c046a3e9b07253c6",
+        "type": "mqtt in",
+        "z": "6109a2c88e111a5f",
+        "name": "ESP32 MQTT",
+        "topic": "esp32/sensors",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "99af400251062e4e",
+        "inputs": 0,
+        "x": 180,
+        "y": 80,
+        "wires": [
+            [
+                "6371bf026a821b8a"
+            ]
+        ]
+    },
+    {
+        "id": "6371bf026a821b8a",
+        "type": "function",
+        "z": "6109a2c88e111a5f",
+        "name": "Format CSV",
+        "func": "// Get MQTT payload\nlet data = msg.payload;\n\n// Get current Philippine time\nlet now = new Date();\nnow.setHours(now.getHours() + 8); // Convert UTC to PH time\nlet dateTime = now.toISOString().replace('T', ' ').split('.')[0]; // YYYY-MM-DD HH:MM:SS\n\n// CSV headers\nconst filePath = \"C:\\\\Users\\\\admin\\\\freshwater_data.csv\"; // Change if needed\nconst fs = global.get('fs'); // Ensure 'fs' is set in global context if using Node.js file node\nlet fsHeaders = \"DateTime,Temperature,TDS Raw,TDS Comp,pH,Turbidity\\n\";\n\n// Check if file exists, if not prepend headers\nconst fsNode = global.get('fsNode');\nif (!fsNode || !fsNode.existsSync(filePath)) {\n    msg.payload = fsHeaders + `${dateTime},${data.tempC.toFixed(2)},${data.tdsRaw.toFixed(2)},${data.tdsComp.toFixed(2)},${data.ph.toFixed(2)},${data.turbidity.toFixed(2)}\\n`;\n} else {\n    msg.payload = `${dateTime},${data.tempC.toFixed(2)},${data.tdsRaw.toFixed(2)},${data.tdsComp.toFixed(2)},${data.ph.toFixed(2)},${data.turbidity.toFixed(2)}\\n`;\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 80,
+        "wires": [
+            [
+                "0da164434c567b52"
+            ]
+        ]
+    },
+    {
+        "id": "0da164434c567b52",
+        "type": "file",
+        "z": "6109a2c88e111a5f",
+        "name": "Save to CSV",
+        "filename": "C:\\Users\\admin\\Documents\\freshwater_data.csv",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": false,
+        "encoding": "utf8",
+        "x": 650,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "60c7d5d64dd205fb",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6",
+            "node-red-contrib-telegrambot": "16.3.2"
+        }
+    }
+]
