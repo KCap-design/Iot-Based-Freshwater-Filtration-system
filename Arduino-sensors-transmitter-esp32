@@ -1,0 +1,138 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+/* -----------------------
+   DS18B20 TEMP SENSOR
+------------------------*/
+#define ONE_WIRE_BUS 2
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+/* -----------------------
+   TDS SENSOR
+------------------------*/
+#define TdsSensorPin A1
+float tdsRaw = 0;
+float tdsCompensated = 0;
+
+/* -----------------------
+   pH SENSOR
+------------------------*/
+#define PhSensorPin A0
+float phValue = 0;
+
+/* -----------------------
+   TURBIDITY SENSOR
+------------------------*/
+#define TurbidityPin A2
+float turbidityNTU = 0;
+
+/* -----------------------
+   OLED SETTINGS
+------------------------*/
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+/* -----------------------
+   SETTINGS
+------------------------*/
+#define NUM_SAMPLES 5      // Number of analog readings to average
+#define UPDATE_INTERVAL 1500  // OLED update interval in ms
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();
+
+  // Initialize OLED
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;) {}
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);  // Small font for 5 readings
+  display.setCursor(0, 0);
+  display.println("Initializing...");
+  display.display();
+  delay(1500);
+}
+
+/* -----------------------
+   FUNCTION: Read analog value average
+------------------------*/
+float readAnalogAverage(int pin) {
+  long sum = 0;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(5);
+  }
+  return sum / (float)NUM_SAMPLES;
+}
+
+void loop() {
+  // --- READ TEMPERATURE
+  sensors.requestTemperatures();
+  float tempC = sensors.getTempCByIndex(0);
+
+  // --- READ TDS SENSOR
+  float sensorValueTDS = readAnalogAverage(TdsSensorPin);
+  float voltageTDS = sensorValueTDS * (5.0 / 1024.0);
+
+  // Raw TDS
+  tdsRaw = (133.42 * voltageTDS * voltageTDS * voltageTDS
+            - 255.86 * voltageTDS * voltageTDS
+            + 857.39 * voltageTDS) * 0.5;
+
+  // Temperature-compensated TDS
+  float compensationCoefficient = 1.0 + 0.02 * (tempC - 25.0);
+  float compensationVoltage = voltageTDS / compensationCoefficient;
+  tdsCompensated = (133.42 * compensationVoltage * compensationVoltage * compensationVoltage
+                    - 255.86 * compensationVoltage * compensationVoltage
+                    + 857.39 * compensationVoltage) * 0.5;
+
+  // --- READ pH SENSOR
+  float sensorValuePH = readAnalogAverage(PhSensorPin);
+  float voltagePH = sensorValuePH * (5.0 / 1024.0);
+  phValue = 7 + ((2.5 - voltagePH) / 0.18);
+
+  // --- READ TURBIDITY SENSOR
+  float sensorValueTurb = readAnalogAverage(TurbidityPin);
+  float voltageTurb = sensorValueTurb * (5.0 / 1024.0);
+  turbidityNTU = -1120.4 * voltageTurb * voltageTurb + 5742.3 * voltageTurb - 4352.9;
+
+  // --- SEND CSV TO SERIAL
+  Serial.print(tempC, 2); Serial.print(",");
+  Serial.print(tdsRaw, 2); Serial.print(",");
+  Serial.print(tdsCompensated, 2); Serial.print(",");
+  Serial.print(phValue, 2); Serial.print(",");
+  Serial.println(turbidityNTU, 2);
+
+  // --- UPDATE OLED DISPLAY ---
+  display.clearDisplay();
+
+  // Labels + Values neatly aligned
+  display.setCursor(0, 0);
+  display.print("T: "); display.print(tempC, 1); display.println(" C");
+
+  display.setCursor(0, 10);
+  display.print("TDS R: "); display.print(tdsRaw, 0); display.println(" ppm");
+
+  display.setCursor(0, 20);
+  display.print("TDS C: "); display.print(tdsCompensated, 0); display.println(" ppm");
+
+  display.setCursor(0, 30);
+  display.print("pH: "); display.println(phValue, 1);
+
+  display.setCursor(0, 40);
+  display.print("Turb: "); display.print(turbidityNTU, 0); display.println(" NTU");
+
+  display.display();
+
+  delay(UPDATE_INTERVAL);
+}
