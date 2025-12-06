@@ -1,0 +1,86 @@
+// Pump control with float switch, relay, debounce and safety timeout
+// Wiring:
+// Relay IN -> D7, Relay VCC -> 5V, Relay GND -> GND
+// Float switch -> D2 (other float wire -> GND) using INPUT_PULLUP
+// Common GND: Arduino GND <-> Adapter negative <-> Pump negative
+
+const uint8_t RELAY_PIN = 7;
+const uint8_t FLOAT_PIN = 2;
+const uint8_t LED_PIN   = 13; // onboard LED
+
+// Safety / behavior settings (tweak as needed)
+const unsigned long DEBOUNCE_MS = 50;        // debounce for float switch
+const unsigned long POLL_MS = 200;           // loop delay
+const unsigned long MAX_RUN_SECONDS = 300;   // max continuous run (seconds) ; set 0 to disable
+const unsigned long START_DELAY_MS = 1000;   // delay after turning pump ON (for stability)
+
+// Internal state
+int lastFloatState = HIGH;
+unsigned long lastDebounceTime = 0;
+bool pumpOn = false;
+unsigned long pumpStartMillis = 0;
+
+void setup() {
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(FLOAT_PIN, INPUT_PULLUP); // float to GND when closed
+
+  digitalWrite(RELAY_PIN, LOW); // ensure pump OFF (assuming LOW = off on your relay)
+  digitalWrite(LED_PIN, LOW);
+  Serial.begin(9600);
+  delay(50);
+  Serial.println("Pump controller ready.");
+}
+
+void loop() {
+  // Read float (LOW when float closed -> water present)
+  int raw = digitalRead(FLOAT_PIN);
+  if (raw != lastFloatState) {
+    lastDebounceTime = millis();
+    lastFloatState = raw;
+  }
+
+  if ((millis() - lastDebounceTime) > DEBOUNCE_MS) {
+    // stable reading available
+    if (raw == LOW) {
+      // Float closed -> water high/present -> pump should be OFF
+      if (pumpOn) {
+        stopPump();
+      }
+    } else {
+      // Float open -> water low -> pump should be ON
+      if (!pumpOn) {
+        startPump();
+      }
+    }
+  }
+
+  // Safety: max run time
+  if (pumpOn && (MAX_RUN_SECONDS > 0)) {
+    unsigned long runSec = (millis() - pumpStartMillis) / 1000UL;
+    if (runSec >= MAX_RUN_SECONDS) {
+      Serial.println("MAX RUN TIME reached -> stopping pump for safety.");
+      stopPump();
+    }
+  }
+
+  delay(POLL_MS);
+}
+
+// Turn pump ON
+void startPump() {
+  Serial.println("STARTING pump...");
+  digitalWrite(RELAY_PIN, HIGH); // set according to your relay module: HIGH -> ON
+  delay(START_DELAY_MS);         // brief delay for stability
+  pumpOn = true;
+  pumpStartMillis = millis();
+  digitalWrite(LED_PIN, HIGH);
+}
+
+// Turn pump OFF
+void stopPump() {
+  Serial.println("STOPPING pump...");
+  digitalWrite(RELAY_PIN, LOW);
+  pumpOn = false;
+  digitalWrite(LED_PIN, LOW);
+}
