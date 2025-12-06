@@ -16,8 +16,8 @@ float turbidity = 0;
 const char* ssidAP = "ESP32_SensorAP";
 const char* passwordAP = "12345678";
 
-const char* ssidSTA = "PLDTHOMEFIBRj8cGb"; // Online Wi-Fi
-const char* passwordSTA = "PLDTWIFI55kU2";
+const char* ssidSTA = "your_ssid"; // Online Wi-Fi
+const char* passwordSTA = "ssid_password";
 
 // ---------------- MQTT ----------------
 const char* mqtt_server = "broker.hivemq.com";
